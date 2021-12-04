@@ -9,7 +9,7 @@ module.exports = (app) => {
   if (process.env.NODE_ENV === "development") {
     app.use(morgan("dev"));
     app.use(function (req, res, next) {
-      setTimeout(next, 500);
+      setTimeout(next, 0);
     });
   }
 };
