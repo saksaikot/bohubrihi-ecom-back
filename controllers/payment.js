@@ -144,4 +144,7 @@ const paymentInit = async (req, res) => {
     });
 };
 
-module.exports = { paymentInit };
+const ipn = async (req, res) => {
+  console.log(req.body);
+};
+module.exports = { paymentInit, ipn };
