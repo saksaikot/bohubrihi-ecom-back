@@ -92,7 +92,7 @@ const paymentInit = async (req, res) => {
     success_url: siteUrl("success"),
     fail_url: siteUrl("fail"),
     cancel_url: siteUrl("cancel"),
-    ipn_url: siteUrl("ipn"),
+    ipn_url: "https://bohubrihi-ecom-back.herokuapp.com/api/payment/ipn",
     shipping_method: "Courier",
     cus_name: req.user.name,
     cus_email: req.user.email,
