@@ -17,4 +17,5 @@
   - if status valid then remove cartItems
   - then save the payment
   - if payment cancel then remove the order
+  - # important I wrongly included profile schema into order, and it automatically included to mongo index, but later when i changed it, the previous index was still there and throwing error, `profile.user index ....`, so if you change any unique then check first if it still on index list
 - # 8.11 Node - Success message

@@ -83,8 +83,17 @@ const paymentInit = async (req, res) => {
   const userId = req.user._id;
   const cartItems = await CartItem.find({ user: userId });
   const profile = await Profile.findOne({ user: userId });
+  const address = _pick(profile, [
+    "phone",
+    "address1",
+    "address2",
+    "city",
+    "state",
+    "postcode",
+    "country",
+  ]);
   const transactionId =
-    Date.now().toString(36) + Math.random().toString(36).substr(2);
+    "_" + Math.random().toString(36).substr(2, 9) + new Date().getTime();
   // profile have address1,address2,city,state,postcode,country,phone
   // console.log(profile);
   const [totalAmount, numOfItem] = cartItems.reduce(
@@ -103,16 +112,8 @@ const paymentInit = async (req, res) => {
     ship_name: "shipping address",
   };
   // console.log({ ...profile, name: req.user.name, email: req.user.email });
-  data = setCustomerInfo(
-    data,
-    profile
-    //   {
-    //   ...profile,
-    //   // name: req.user.name,
-    //   // email: req.user.email,
-    // }
-  );
-  data = setShippingInfo(data, profile);
+  data = setCustomerInfo(data, address);
+  data = setShippingInfo(data, address);
   data = setItemInfo(data, {
     totalAmount,
     numOfItem,
@@ -121,7 +122,6 @@ const paymentInit = async (req, res) => {
     productCategory: "Multi",
     productProfile: "Multi",
   });
-  // return res.send(data);
 
   const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
   sslcz
@@ -129,14 +129,24 @@ const paymentInit = async (req, res) => {
     .then(async (apiResponse) => {
       // return res.status(200).send(apiResponse, data);
       // Redirect the user to payment gateway
+
       if (apiResponse.status === "SUCCESS") {
-        const order = new Order({
+        const orderData = {
           cartItems,
-          profile,
-          transaction_id: transactionId,
+          address,
+          transactionId,
+          userId,
           sessionKey: apiResponse.sessionkey,
-        });
+        };
+        // console.log(orderData);
+        // return res.send("1");
+        const order = new Order(orderData);
         await order.save();
+        // try {
+        //   await order.save();
+        // } catch (err) {
+        //   console.error(err.message);
+        // }
         return res.send({
           status: "SUCCESS",
           redirect: apiResponse.GatewayPageURL,
