@@ -1,11 +1,13 @@
 const SSLCommerzPayment = require("sslcommerz-lts");
 const { _pick } = require("../helper/lodash");
 const { CartItem } = require("../models/cartItem");
+const { Order } = require("../models/order");
+const { Payment } = require("../models/payment");
 const { Profile } = require("../models/profile");
 const store_id = process.env.STORE_ID;
 const store_passwd = process.env.STORE_PASSWORD;
 const is_live = false;
-const siteUrl = (path) => `http://localhost:3000/${path}`;
+const siteUrl = (path) => `http://localhost:3000/payment/${path}`;
 const setCustomerInfo = (
   data,
   {
@@ -81,6 +83,8 @@ const paymentInit = async (req, res) => {
   const userId = req.user._id;
   const cartItems = await CartItem.find({ user: userId });
   const profile = await Profile.findOne({ user: userId });
+  const transactionId =
+    Date.now().toString(36) + Math.random().toString(36).substr(2);
   // profile have address1,address2,city,state,postcode,country,phone
   // console.log(profile);
   const [totalAmount, numOfItem] = cartItems.reduce(
@@ -112,7 +116,7 @@ const paymentInit = async (req, res) => {
   data = setItemInfo(data, {
     totalAmount,
     numOfItem,
-    tranId: Date.now().toString(36) + Math.random().toString(36).substr(2),
+    tranId: transactionId,
     productName: "Multi",
     productCategory: "Multi",
     productProfile: "Multi",
@@ -125,11 +129,20 @@ const paymentInit = async (req, res) => {
     .then((apiResponse) => {
       // return res.status(200).send(apiResponse, data);
       // Redirect the user to payment gateway
-      if (apiResponse.status === "SUCCESS")
+      if (apiResponse.status === "SUCCESS") {
+        const order = new Order({
+          cartItems,
+          profile,
+          transaction_id,
+          sessionKey: apiResponse.sessionkey,
+        });
+        await order.save();
         return res.send({
           status: "SUCCESS",
           redirect: apiResponse.GatewayPageURL,
         });
+      }
+
       // else (apiResponse.status === "FAILED")
       return res.status(200).send({ status: "FAILED" });
 
@@ -145,7 +158,20 @@ const paymentInit = async (req, res) => {
 };
 
 const ipn = async (req, res) => {
-  console.log(req.body);
+  const payment = new Payment(req.body);
+  if (payment.status === "VALID") {
+    const order = await Order.updateOne(
+      { transactionId: payment.tran_id },
+      { status: "Complete" }
+    );
+
+    //order complete now remove cart items
+    await CartItem.deleteMany(order.cartItems);
+  }
+  else{
+    await Order.deleteOne({{ transactionId: payment.tran_id }});
+  }
+  await payment.save();
   return res.send("ok");
 };
 module.exports = { paymentInit, ipn };

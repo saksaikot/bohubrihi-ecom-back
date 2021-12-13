@@ -13,4 +13,8 @@
   - created order and payment model
   - payment model to store the data from ipn
 - # 8.10 Node - ipn controller
+  - created ipn controller
+  - if status valid then remove cartItems
+  - then save the payment
+  - if payment cancel then remove the order
 - # 8.11 Node - Success message
