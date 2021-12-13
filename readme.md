@@ -10,5 +10,7 @@
   - send "ok" request to ipn
 
 - # 8.9 Node - order and payment model
+  - created order and payment model
+  - payment model to store the data from ipn
 - # 8.10 Node - ipn controller
 - # 8.11 Node - Success message

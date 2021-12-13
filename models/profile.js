@@ -28,4 +28,4 @@ const profileSchema = Schema({
 
 */
 const Profile = model("Profile", profileSchema);
-module.exports = { Profile };
+module.exports = { Profile, profileSchema };
