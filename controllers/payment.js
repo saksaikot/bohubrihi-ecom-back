@@ -133,7 +133,7 @@ const paymentInit = async (req, res) => {
         const order = new Order({
           cartItems,
           profile,
-          transaction_id,
+          transaction_id: transactionId,
           sessionKey: apiResponse.sessionkey,
         });
         await order.save();
