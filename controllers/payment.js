@@ -126,7 +126,7 @@ const paymentInit = async (req, res) => {
   const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
   sslcz
     .init(data)
-    .then((apiResponse) => {
+    .then(async (apiResponse) => {
       // return res.status(200).send(apiResponse, data);
       // Redirect the user to payment gateway
       if (apiResponse.status === "SUCCESS") {
@@ -167,9 +167,8 @@ const ipn = async (req, res) => {
 
     //order complete now remove cart items
     await CartItem.deleteMany(order.cartItems);
-  }
-  else{
-    await Order.deleteOne({{ transactionId: payment.tran_id }});
+  } else {
+    await Order.deleteOne({ transactionId: payment.tran_id });
   }
   await payment.save();
   return res.send("ok");
